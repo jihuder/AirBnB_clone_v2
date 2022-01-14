@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 # Factory creates File for do_deploy.
+
+from fabric.api import *
+import datetime
 import os.path
 from fabric.api import env
 from fabric.api import put
