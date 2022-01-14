@@ -1,67 +1,48 @@
 #!/usr/bin/python3
-# Factory creates File for do_deploy.
-
+""" Genaera tgz files in the server """
 from fabric.api import *
 import datetime
 import os.path
-from fabric.api import env
-from fabric.api import put
-from fabric.api import run
-
-env.user = 'ubuntu'
-env.hosts = ["34.74.85.117", "52.90.223.70"]
+env.hosts = ['34.74.85.117', '52.90.223.70']
 
 
 def do_pack():
-
-    """tgz format"""
-    try:
-        date = datetime.now().strftime('%Y%m%d%H%M%S')
-        local("mkdir -p versions")
-        name = "web_static_" + date + ".tgz"
-        path = "versions/" + name
-        local("tar -cvzf {} web_static".format(path))
-        return path
-    except Exception:
+    """ Create file .tgz """
+    date_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    name_file = "versions/web_static_" + date_time + ".tgz"
+    localpth = "web_static/"
+    local("mkdir -p versions")
+    result = local("tar -zcvf {} {}".format(name_file, localpth))
+    if result is None:
         return None
+    else:
+        return name_file
 
 
 def do_deploy(archive_path):
-    """ creates and distributes an archive to your web servers """
-    if os.path.isfile(archive_path) is False:
+    """ Create file to server """
+    file_name = archive_path.split("/")[-1]
+    file_wext = file_name.split(".")[0]
+    path = "/data/web_static/releases/"
+    if os.path.exists(archive_path) is False:
         return False
-    file = archive_path.split("/")[-1]
-    name = file.split(".")[0]
 
-    if put(archive_path, "/tmp/{}".format(file)).failed is True:
-        return False
-    if run("rm -rf /data/web_static/releases/{}/".
-           format(name)).failed is True:
-        return False
-    if run("mkdir -p /data/web_static/releases/{}/".
-           format(name)).failed is True:
-        return False
-    if run("tar -xzf /tmp/{} -C /data/web_static/releases/{}/".
-           format(file, name)).failed is True:
-        return False
-    if run("rm /tmp/{}".format(file)).failed is True:
-        return False
-    if run("mv /data/web_static/releases/{}/web_static/* "
-           "/data/web_static/releases/{}/".format(name, name)).failed is True:
-        return False
-    if run("rm -rf /data/web_static/releases/{}/web_static".
-           format(name)).failed is True:
-        return False
-    if run("rm -rf /data/web_static/current").failed is True:
-        return False
-    if run("ln -s /data/web_static/releases/{}/ /data/web_static/current".
-           format(name)).failed is True:
-        return False
+    put(archive_path, "/tmp/")
+    run("mkdir -p {}{}".format(path, file_wext))
+    run("tar -xzf /tmp/{} -C {}{}".format(file_name, path, file_wext))
+    run("rm /tmp/{}".format(file_name))
+    run("mv {}{}/web_static/* {}{}/".format(path, file_wext, path, file_wext))
+    cmd = "rm -rf /data/web_static/releases/"
+    run("{}{}/web_static".format(cmd, file_wext))
+    run("rm -rf /data/web_static/current")
+    command = "ln -s /data/web_static/releases/{}".format(file_wext)
+    command += " /data/web_static/current"
+    run(command)
     return True
 
 
 def deploy():
-    """ Deploy content using previous functions """
+    """ Deploy content """
     file = do_pack()
     if file is None:
         return False
