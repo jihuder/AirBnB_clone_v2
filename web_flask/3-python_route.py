@@ -24,11 +24,11 @@ def display_c_text(txt):
     return 'C {}'.format(txt.replace('_', ' '))
 
 
-@app.route('/python', defaults={'text': 'is cool'}, strict_slashes=False)
-@app.route('/python/<string:text>', strict_slashes=False)
-def display_python_text(text):
+@app.route('/python/', strict_slashes=False)
+@app.route('/python/<txt>', strict_slashes=False)
+def python_route(txt='is cool'):
     """Returns text variable"""
-    return 'Python {}'.format(escape(text.replace('_', ' ')))
+    return 'Python {}'.format(txt.replace('_', ' '))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
